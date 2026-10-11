@@ -1,9 +1,6 @@
 package com.dailycodework.dreamshop.request;
 
 import com.dailycodework.dreamshop.model.Category;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,5 +13,5 @@ public class AddProductRequest {
     private String description;
     private BigDecimal price;
     private  int inventory;
-    private Category category;
+    private String category;
 }

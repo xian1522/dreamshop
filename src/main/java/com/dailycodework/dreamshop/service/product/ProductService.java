@@ -1,13 +1,18 @@
 package com.dailycodework.dreamshop.service.product;
 
+import com.dailycodework.dreamshop.dto.ImageDto;
+import com.dailycodework.dreamshop.dto.ProductDto;
 import com.dailycodework.dreamshop.exception.ProductNotFoundException;
 import com.dailycodework.dreamshop.model.Category;
+import com.dailycodework.dreamshop.model.Image;
 import com.dailycodework.dreamshop.model.Product;
 import com.dailycodework.dreamshop.repository.CategoryRepository;
+import com.dailycodework.dreamshop.repository.ImageRepository;
 import com.dailycodework.dreamshop.repository.ProductRepository;
 import com.dailycodework.dreamshop.request.AddProductRequest;
 import com.dailycodework.dreamshop.request.ProductUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,14 +23,16 @@ import java.util.Optional;
 public class ProductService implements IProductService{
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ImageRepository imageRepository;
+    private final ModelMapper modelMapper;
     @Override
     public Product addProduct(AddProductRequest request) {
-        Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
+        Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory()))
                 .orElseGet(() -> {
-                  Category newCategory = new Category(request.getCategory().getName());
+                  Category newCategory = new Category(request.getCategory());
                   return categoryRepository.save(newCategory);
                 });
-        request.setCategory(category);
+//        request.setCategory(category);
         return productRepository.save(createProduct(request, category));
     }
 
@@ -106,5 +113,21 @@ public class ProductService implements IProductService{
     @Override
     public Long countProductsByBrandAndName(String brand, String name) {
         return productRepository.countByBrandAndName(brand, name);
+    }
+    @Override
+    public List<ProductDto> getConvertedProducts(List<Product> products) {
+        return products.stream()
+                .map(product -> convertToDto(product))
+                .toList();
+    }
+    @Override
+    public ProductDto convertToDto(Product product) {
+        ProductDto productDto = modelMapper.map(product, ProductDto.class);
+        List<Image> images = imageRepository.findByProductId(product.getId());
+        List<ImageDto> imageDtos = images.stream()
+                .map(image -> modelMapper.map(image, ImageDto.class))
+                .toList();
+        productDto.setImages(imageDtos);
+        return productDto;
     }
 }
